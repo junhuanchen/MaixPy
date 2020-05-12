@@ -1,6 +1,7 @@
 #ifndef __FLASH_H
 #define __FLASH_H
 
+#include "g_def.h"
 #include "MFCC.h"
 #define FLASH_PAGE_SIZE 2048
 
@@ -24,7 +25,7 @@
 // {
 // #endif
 
-uint8_t save_ftr_mdl(v_ftr_tag *ftr, uint32_t addr);
+uint8_t save_ftr_mdl(v_ftr_tag *ftr, u32 addr);
 
 //void init_voice_mdl(void);
 extern v_ftr_tag ftr_save[20 * 4];
