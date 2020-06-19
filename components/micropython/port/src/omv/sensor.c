@@ -11,6 +11,7 @@
 #include "mp.h"
 #include "cambus.h"
 #include "ov2640.h"
+#include "ov5640.h"
 #include "sensor.h"
 #include "framebuffer.h"
 #include "omv_boardconfig.h"
@@ -26,6 +27,7 @@
 #include "ov7740.h"
 #include "mphalport.h"
 #include "ov3660.h"
+#include "ov5640.h"
 
 extern volatile dvp_t *const dvp;
 
@@ -334,6 +336,10 @@ int sensro_ov_detect(sensor_t *sensor)
                 mp_printf(&mp_plat_print, "[MAIXPY]: find ov2640\n");
                 init_ret = ov2640_init(sensor);
                 break;
+            case OV5640_ID:
+                mp_printf(&mp_plat_print, "[MAIXPY]: find ov5640\n");
+                init_ret = ov5640_init(sensor);
+                break;
             // case OV7725_ID:
             // 	/*ov7725_init*/
             //     printk("find ov7725\r\n");
@@ -434,19 +440,28 @@ int sensor_init_dvp(mp_int_t freq, bool default_freq)
 {
     int init_ret = 0;
 
-    fpioa_set_function(47, FUNC_CMOS_PCLK);
-    fpioa_set_function(46, FUNC_CMOS_XCLK);
-    fpioa_set_function(45, FUNC_CMOS_HREF);
-    fpioa_set_function(44, FUNC_CMOS_PWDN);
-    fpioa_set_function(43, FUNC_CMOS_VSYNC);
-    fpioa_set_function(42, FUNC_CMOS_RST);
+    // fpioa_set_function(47, FUNC_CMOS_PCLK);
+    // fpioa_set_function(46, FUNC_CMOS_XCLK);
+    // fpioa_set_function(45, FUNC_CMOS_HREF);
+    // fpioa_set_function(44, FUNC_CMOS_PWDN);
+    // fpioa_set_function(43, FUNC_CMOS_VSYNC);
+    // fpioa_set_function(42, FUNC_CMOS_RST);
+
+	fpioa_set_function(40, FUNC_CMOS_PCLK);
+	fpioa_set_function(41, FUNC_CMOS_XCLK);
+	fpioa_set_function(42, FUNC_CMOS_HREF);
+	fpioa_set_function(43, FUNC_CMOS_PWDN);
+	fpioa_set_function(44, FUNC_CMOS_VSYNC);
+	fpioa_set_function(45, FUNC_CMOS_RST);
 
     // fpioa_set_function(41, FUNC_SCCB_SCLK);
     // fpioa_set_function(40, FUNC_SCCB_SDA);
 
     // Initialize the camera bus, 8bit reg
     // cambus_init(8, -2, 41, 40, 0, 0);
-    cambus_init(8, 2, 41, 40, 0, 0);
+    // cambus_init(8, 2, 41, 40, 0, 0);    
+    cambus_init(16, 2, 46, 47, 0, 0);
+
     // Initialize dvp interface
     dvp_set_xclk_rate(freq);
 
@@ -486,7 +501,9 @@ int sensor_init_dvp(mp_int_t freq, bool default_freq)
     {
         dvp_set_xclk_rate(22000000);
     }
-    dvp_set_image_format(DVP_CFG_YUV_FORMAT);
+    // dvp_set_image_format(DVP_CFG_YUV_FORMAT);    
+    dvp_set_image_format(DVP_CFG_RGB_FORMAT);
+
     dvp_enable_burst();
     dvp_disable_auto();
     dvp_set_output_enable(0, 1); //enable to AI
@@ -690,6 +707,10 @@ int binocular_sensor_scan()
             case OV2640_ID:
                 mp_printf(&mp_plat_print, "[MAIXPY]: find ov2640\n");
                 init_ret = ov2640_init(&sensor);
+                break;
+            case OV5640_ID:
+                mp_printf(&mp_plat_print, "[MAIXPY]: find ov5640\n");
+                init_ret = ov5640_init(&sensor);
                 break;
             case OV7740_ID:
                 mp_printf(&mp_plat_print, "[MAIXPY]: find ov7740\n");
