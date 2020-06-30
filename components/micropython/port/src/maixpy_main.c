@@ -307,8 +307,10 @@ void load_config_from_spiffs(config_data_t *config)
         config->freq_pll1 = FREQ_PLL1_DEFAULT;
         config->kpu_div = 1;
         config->gc_heap_size = CONFIG_MAIXPY_GC_HEAP_SIZE;
-        if (!save_config_to_spiffs(config))
+        if (!save_config_to_spiffs(config)) {
             printk("save config fail\r\n");
+            SPIFFS_format(&spiffs_user_mount_handle.fs);
+        }
         return;
     }
     else
@@ -318,6 +320,7 @@ void load_config_from_spiffs(config_data_t *config)
         if (ret <= 0)
         {
             printk("read config fail\r\n");
+            SPIFFS_format(&spiffs_user_mount_handle.fs);
         }
         else
         {
