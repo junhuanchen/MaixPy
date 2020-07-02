@@ -401,6 +401,8 @@ static int safe_map_pixel(image_t *dst, image_t *src, int pixel)
     }
 }
 
+#include "printf.h"
+
 void imlib_draw_image(image_t *img, image_t *other, int x_off, int y_off, float x_scale, float y_scale, float alpha, image_t *mask)
 {
     float over_xscale = IM_DIV(1.0, x_scale), over_yscale = IM_DIV(1.0f, y_scale);
@@ -414,25 +416,23 @@ void imlib_draw_image(image_t *img, image_t *other, int x_off, int y_off, float 
             if ((!mask) || image_get_mask_pixel(mask, other_x, other_y)) {
                 int pixel = imlib_get_pixel(other, other_x, other_y);
                 if(alpha == 1) {
-                    uint16_t r = COLOR_RGB565_TO_R8(pixel);
-                    uint16_t g = COLOR_RGB565_TO_G8(pixel);
-                    uint16_t b = COLOR_RGB565_TO_B8(pixel);
+                    uint8_t r = COLOR_RGB565_TO_R8(pixel);
+                    uint8_t g = COLOR_RGB565_TO_G8(pixel);
+                    uint8_t b = COLOR_RGB565_TO_B8(pixel);
                     uint16_t c=COLOR_R8_G8_B8_TO_RGB565(r>255?255:r,g>255?255:g, b>255?255:b);
                     imlib_set_pixel(img, x_off + x, y_off + y, c);
-                }
-                else
-                {
+                } else {
                     int pixel2=imlib_get_pixel(img, x_off + x, y_off + y);
 
-                    uint16_t t_r = COLOR_RGB565_TO_R8(pixel);
-                    uint16_t t_g = COLOR_RGB565_TO_G8(pixel);
-                    uint16_t t_b = COLOR_RGB565_TO_B8(pixel);
+                    uint8_t t_r = COLOR_RGB565_TO_R8(pixel);
+                    uint8_t t_g = COLOR_RGB565_TO_G8(pixel);
+                    uint8_t t_b = COLOR_RGB565_TO_B8(pixel);
+
+                    float tmp = ((uint16_t)(((t_r)) + (t_g) + (t_b)) / (256.0 * 3.0));
                     
-                    uint8_t tmp = 0x0 | (((t_r & 0x10) == 0x10) << 2) | (((t_g & 0x20) == 0x20) << 1) | ((t_b & 0x10) == 0x10);
+                    float t_alpha = alpha * tmp; // 0.01 ~ 0.00001
 
-                    float t_alpha = alpha > (tmp * 0.05) ? alpha - (tmp * 0.05) : 0.0;
                     float beta = 1 - t_alpha;
-
                     uint16_t r=(uint16_t)(((float)(uint16_t)COLOR_RGB565_TO_R8(pixel))*t_alpha+((float)(uint16_t)COLOR_RGB565_TO_R8(pixel2))*beta);
                     uint16_t g=(uint16_t)(((float)(uint16_t)COLOR_RGB565_TO_G8(pixel))*t_alpha+((float)(uint16_t)COLOR_RGB565_TO_G8(pixel2))*beta);
                     uint16_t b=(uint16_t)(((float)(uint16_t)COLOR_RGB565_TO_B8(pixel))*t_alpha+((float)(uint16_t)COLOR_RGB565_TO_B8(pixel2))*beta);
