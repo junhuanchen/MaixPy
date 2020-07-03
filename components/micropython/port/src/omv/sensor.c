@@ -459,8 +459,8 @@ int sensor_init_dvp(mp_int_t freq, bool default_freq)
 
     // Initialize the camera bus, 8bit reg
     // cambus_init(8, -2, 41, 40, 0, 0);
-    // cambus_init(8, 2, 41, 40, 0, 0);    
-    cambus_init(16, 2, 46, 47, 0, 0);
+    cambus_init(8, 2, 41, 40, 0, 0);    
+    // cambus_init(16, 2, 46, 47, 0, 0);
 
     // Initialize dvp interface
     dvp_set_xclk_rate(freq);
