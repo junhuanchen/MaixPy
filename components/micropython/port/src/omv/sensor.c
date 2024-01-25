@@ -289,136 +289,167 @@ int sensro_ov_detect(sensor_t *sensor)
     DCMI_RESET_LOW();
     mp_hal_delay_ms(30);
 
-    /* Probe the ov sensor */
-    sensor->slv_addr = cambus_scan();
-    if (sensor->slv_addr == 0)
-    {
-        /* Sensor has been held in reset,
-           so the reset line is active low */
-        sensor->reset_pol = ACTIVE_LOW;
+    printf("dls test \r\n");
 
-        /* Pull the sensor out of the reset state,systick_sleep() */
-        /* Need set PWDN and RST again for some sensor*/
-        DCMI_PWDN_HIGH();
-        mp_hal_delay_ms(10);
-        DCMI_PWDN_LOW();
-        mp_hal_delay_ms(10);
-        DCMI_RESET_HIGH();
-        mp_hal_delay_ms(30);
+    // /* Probe the ov sensor */
+    // sensor->slv_addr = cambus_scan();
+    // if (sensor->slv_addr == 0)
+    // {
+    //     printf("0 sensor->slv_addr == 0\r\n");
 
-        /* Probe again to set the slave addr */
-        sensor->slv_addr = cambus_scan();
-        if (sensor->slv_addr == 0)
-        {
-            sensor->pwdn_pol = ACTIVE_LOW;
-            /* Need set PWDN and RST again for some sensor*/
-            DCMI_PWDN_HIGH();
-            mp_hal_delay_ms(10);
-            DCMI_RESET_LOW();
-            mp_hal_delay_ms(10);
-            DCMI_RESET_HIGH();
-            mp_hal_delay_ms(30);
+    //     /* Sensor has been held in reset,
+    //        so the reset line is active low */
+    //     sensor->reset_pol = ACTIVE_LOW;
 
-            sensor->slv_addr = cambus_scan();
-            if (sensor->slv_addr == 0)
-            {
-                sensor->reset_pol = ACTIVE_HIGH;
+    //     /* Pull the sensor out of the reset state,systick_sleep() */
+    //     /* Need set PWDN and RST again for some sensor*/
+    //     DCMI_PWDN_HIGH();
+    //     mp_hal_delay_ms(10);
+    //     DCMI_PWDN_LOW();
+    //     mp_hal_delay_ms(10);
+    //     DCMI_RESET_HIGH();
+    //     mp_hal_delay_ms(30);
 
-                /* Need set PWDN and RST again for some sensor*/
-                DCMI_PWDN_LOW();
-                mp_hal_delay_ms(10);
-                DCMI_PWDN_HIGH();
-                mp_hal_delay_ms(10);
-                DCMI_RESET_LOW();
-                mp_hal_delay_ms(30);
+    //     /* Probe again to set the slave addr */
+    //     sensor->slv_addr = cambus_scan();
+    //     if (sensor->slv_addr == 0)
+    //     {
+    //         printf("1 sensor->slv_addr == 0\r\n");
+    //         sensor->pwdn_pol = ACTIVE_LOW;
+    //         /* Need set PWDN and RST again for some sensor*/
+    //         DCMI_PWDN_HIGH();
+    //         mp_hal_delay_ms(10);
+    //         DCMI_RESET_LOW();
+    //         mp_hal_delay_ms(10);
+    //         DCMI_RESET_HIGH();
+    //         mp_hal_delay_ms(30);
 
-                sensor->slv_addr = cambus_scan();
-                if (sensor->slv_addr == 0)
-                {
-                    //should do something?
-                    return -2;
-                }
-            }
-        }
-    }
+    //         sensor->slv_addr = cambus_scan();
+    //         if (sensor->slv_addr == 0)
+    //         {
+    //             printf("2 sensor->slv_addr == 0\r\n");
+    //             sensor->reset_pol = ACTIVE_HIGH;
 
+    //             /* Need set PWDN and RST again for some sensor*/
+    //             DCMI_PWDN_LOW();
+    //             mp_hal_delay_ms(10);
+    //             DCMI_PWDN_HIGH();
+    //             mp_hal_delay_ms(10);
+    //             DCMI_RESET_LOW();
+    //             mp_hal_delay_ms(30);
+
+    //             sensor->slv_addr = cambus_scan();
+    //             if (sensor->slv_addr == 0)
+    //             {
+    //                 //should do something?
+    //                 return -2;
+    //             }
+    //         }
+    //     }
+    // }
+
+    /* Sensor has been held in reset,
+        so the reset line is active low */
+    sensor->reset_pol = ACTIVE_LOW;
+
+    /* Pull the sensor out of the reset state,systick_sleep() */
+    /* Need set PWDN and RST again for some sensor*/
+    DCMI_PWDN_HIGH();
+    mp_hal_delay_ms(10);
+    DCMI_PWDN_LOW();
+    mp_hal_delay_ms(10);
+    DCMI_RESET_HIGH();
+    mp_hal_delay_ms(30);
+
+    sensor->slv_addr = 0x30;
+    
+    // printk("sensor->slv_addr = %x\n", sensor->slv_addr);
+    // printk("sensor->reset_pol = %x\n", sensor->reset_pol);
+    // printk("sensor->pwdn_pol = %x\n", sensor->pwdn_pol);
+    uint8_t reg_width = cambus_reg_width(8);
+    // printk("reg_width = %x\n", reg_width);
+    
     // Clear sensor chip ID.
-    sensor->chip_id = 0;
+    sensor->chip_id = OV2640_ID;
 
     // Set default snapshot function.
     sensor->snapshot = sensor_snapshot;
     sensor->flush = sensor_flush;
-    if (sensor->slv_addr == LEPTON_ID)
-    {
-        sensor->chip_id = LEPTON_ID;
-        /*set LEPTON xclk rate*/
-        /*lepton_init*/
-    }
-    else
-    {
-        // Read ON semi sensor ID.
-        cambus_readb(sensor->slv_addr, ON_CHIP_ID, (uint8_t *)&sensor->chip_id);
-        if (sensor->chip_id == MT9V034_ID)
-        {
-            /*set MT9V034 xclk rate*/
-            /*mt9v034_init*/
-        }
-        else
-        { // Read OV sensor ID.
-            uint8_t tmp;
-            uint8_t reg_width = cambus_reg_width();
-            uint16_t reg_addr, reg_addr2;
-            if (reg_width == 8)
-            {
-                reg_addr = OV_CHIP_ID;
-                reg_addr2 = OV_CHIP_ID2;
-            }
-            else
-            {
-                reg_addr = OV_CHIP_ID_16BIT;
-                reg_addr2 = OV_CHIP_ID2_16BIT;
-            }
-            cambus_readb(sensor->slv_addr, reg_addr, &tmp);
-            sensor->chip_id = tmp << 8;
-            cambus_readb(sensor->slv_addr, reg_addr2, &tmp);
-            sensor->chip_id |= tmp;
-            // Initialize sensor struct.
-            switch (sensor->chip_id)
-            {
-            case OV9650_ID:
-                /*ov9650_init*/
-                break;
-            case OV2640_ID:
-                mp_printf(&mp_plat_print, "[MAIXPY]: find ov2640\n");
-                init_ret = ov2640_init(sensor);
-                break;
-            case OV5640_ID:
-                mp_printf(&mp_plat_print, "[MAIXPY]: find ov5640\n");
-                init_ret = ov5640_init(sensor);
-                break;
-            // case OV7725_ID:
-            // 	/*ov7725_init*/
-            //     printk("find ov7725\r\n");
-            //     init_ret = ov7725_init(sensor);
-            //     break;
-            case OV5642_ID:
-                mp_printf(&mp_plat_print, "[MAIXPY]: find ov5642\n");
-                init_ret = ov5642_init(sensor);
-                break;
-            case OV7740_ID:
-                mp_printf(&mp_plat_print, "[MAIXPY]: find ov7740\n");
-                init_ret = ov7740_init(sensor);
-                break;
-            case OV3660_ID:
-                mp_printf(&mp_plat_print, "[MAIXPY]: find ov3660\n");
-                init_ret = ov3660_init(sensor);
-                break;
-            default:
-                // Sensor is not supported.
-                return -3;
-            }
-        }
-    }
+    
+    mp_printf(&mp_plat_print, "[MAIXPY]: find ov2640\n");
+    init_ret = ov2640_init(sensor);
+
+    // if (sensor->slv_addr == LEPTON_ID)
+    // {
+    //     sensor->chip_id = LEPTON_ID;
+    //     /*set LEPTON xclk rate*/
+    //     /*lepton_init*/
+    // }
+    // else
+    // {
+    //     // Read ON semi sensor ID.
+    //     cambus_readb(sensor->slv_addr, ON_CHIP_ID, (uint8_t *)&sensor->chip_id);
+    //     if (sensor->chip_id == MT9V034_ID)
+    //     {
+    //         /*set MT9V034 xclk rate*/
+    //         /*mt9v034_init*/
+    //     }
+    //     else
+    //     { // Read OV sensor ID.
+    //         uint8_t tmp;
+    //         uint8_t reg_width = cambus_reg_width(0);
+    //         uint16_t reg_addr, reg_addr2;
+    //         if (reg_width == 8)
+    //         {
+    //             reg_addr = OV_CHIP_ID;
+    //             reg_addr2 = OV_CHIP_ID2;
+    //         }
+    //         else
+    //         {
+    //             reg_addr = OV_CHIP_ID_16BIT;
+    //             reg_addr2 = OV_CHIP_ID2_16BIT;
+    //         }
+    //         cambus_readb(sensor->slv_addr, reg_addr, &tmp);
+    //         sensor->chip_id = tmp << 8;
+    //         cambus_readb(sensor->slv_addr, reg_addr2, &tmp);
+    //         sensor->chip_id |= tmp;
+    //         // Initialize sensor struct.
+    //         switch (sensor->chip_id)
+    //         {
+    //         case OV9650_ID:
+    //             /*ov9650_init*/
+    //             break;
+    //         case OV2640_ID:
+    //             mp_printf(&mp_plat_print, "[MAIXPY]: find ov2640\n");
+    //             init_ret = ov2640_init(sensor);
+    //             break;
+    //         case OV5640_ID:
+    //             mp_printf(&mp_plat_print, "[MAIXPY]: find ov5640\n");
+    //             init_ret = ov5640_init(sensor);
+    //             break;
+    //         // case OV7725_ID:
+    //         // 	/*ov7725_init*/
+    //         //     printk("find ov7725\r\n");
+    //         //     init_ret = ov7725_init(sensor);
+    //         //     break;
+    //         case OV5642_ID:
+    //             mp_printf(&mp_plat_print, "[MAIXPY]: find ov5642\n");
+    //             init_ret = ov5642_init(sensor);
+    //             break;
+    //         case OV7740_ID:
+    //             mp_printf(&mp_plat_print, "[MAIXPY]: find ov7740\n");
+    //             init_ret = ov7740_init(sensor);
+    //             break;
+    //         case OV3660_ID:
+    //             mp_printf(&mp_plat_print, "[MAIXPY]: find ov3660\n");
+    //             init_ret = ov3660_init(sensor);
+    //             break;
+    //         default:
+    //             // Sensor is not supported.
+    //             return -3;
+    //         }
+    //     }
+    // }
 
     if (init_ret != 0)
     {
@@ -635,7 +666,7 @@ int sensor_init_dvp(mp_int_t freq, bool default_freq)
     {
         dvp_set_xclk_rate(22000000);
     }
-    dvp_set_image_format(DVP_CFG_YUV_FORMAT);
+    dvp_set_image_format(DVP_CFG_RGB_FORMAT);
     dvp_disable_burst();
 	dvp_disable_auto();
 	dvp_set_output_enable(0, 1);	//enable to AI
@@ -671,6 +702,7 @@ int sensor_init_irq()
 
 int sensor_reset(mp_int_t freq, bool default_freq, bool set_regs, bool double_buff, uint8_t choice_dev)
 {
+    // printf("1 time:%ld\r\n", systick_current_millis());
 #if CONFIG_MAIXPY_OMV_DOUBLE_BUFF
     g_sensor_buff_index_out = 0;
     g_sensor_buff_index_in = 0;
@@ -681,12 +713,15 @@ int sensor_reset(mp_int_t freq, bool default_freq, bool set_regs, bool double_bu
     sensor.hmirror = false;
     sensor.double_buff = double_buff;
     sensor.choice_dev = choice_dev;
+    // printf("2 time:%ld\r\n", systick_current_millis());
     sensor_init_fb(); //init FB
+    // printf("3 time:%ld\r\n", systick_current_millis());
     if (sensor_init_dvp(freq, default_freq) != 0)
     {
         //init pins, scan I2C, do ov2640 init
         return -1;
     }
+    // printf("4 time:%ld\r\n", systick_current_millis());
     // Reset the sesnor state
     sensor.sde = 0;
     sensor.pixformat = 0;
@@ -701,19 +736,24 @@ int sensor_reset(mp_int_t freq, bool default_freq, bool set_regs, bool double_bu
     // Call sensor-specific reset function
     if (set_regs)
     {
+        // printf("5 time:%ld\r\n", systick_current_millis());
         if (sensor.reset(&sensor) != 0)
         { //rst reg, set default cfg.
             return -1;
         }
     }
+    // printf("6 time:%ld\r\n", systick_current_millis());
     // Disable dvp  IRQ before all cfg done
     sensor_init_irq();
+    // printf("7 time:%ld\r\n", systick_current_millis());
     mp_hal_delay_ms(20);
     sensor.reset_set = true;
     if (sensor.size_set)
     {
+        // printf("8 time:%ld\r\n", systick_current_millis());
         sensor_run(1);
     }
+    // printf("9 time:%ld\r\n", systick_current_millis());
     // mp_printf(&mp_plat_print, "[MAIXPY]: exit sensor_reset\n");
     return 0;
 }
@@ -829,7 +869,7 @@ int binocular_sensor_scan()
         {
             // Read OV sensor ID.
             uint8_t tmp;
-            uint8_t reg_width = cambus_reg_width();
+            uint8_t reg_width = cambus_reg_width(0);
             uint16_t reg_addr, reg_addr2;
             if (reg_width == 8)
             {
@@ -1069,10 +1109,13 @@ int sensor_set_pixformat(pixformat_t pixformat, bool set_regs)
         // monkey patch about ide default sensor.set_pixformat(sensor.RGB565) but it need sensor.YUV422
         if (sensor.chip_id != OV7740_ID && sensor.chip_id != GC0328_ID && sensor.chip_id != OV2640_ID)
         {
+            printf("dls sensor_set_pixformat: DVP_CFG_RGB_FORMAT\n");
+        
             dvp_set_image_format(DVP_CFG_RGB_FORMAT);
             break;
         } // to next yuv422
     case PIXFORMAT_YUV422:
+        printf("dls sensor_set_pixformat: PIXFORMAT_YUV422\n");
         dvp_set_image_format(DVP_CFG_YUV_FORMAT);
         break;
     case PIXFORMAT_GRAYSCALE:

@@ -582,6 +582,7 @@ static const uint8_t saturation_regs[NUM_SATURATION_LEVELS + 1][5] = {
 
 static int reset(sensor_t *sensor)
 {	
+    // printf("reset 1 time:%ld\r\n", systick_current_millis());
     int i=0;
     const uint8_t (*regs)[2];
 
@@ -606,6 +607,8 @@ static int reset(sensor_t *sensor)
         cambus_writeb(sensor->slv_addr, regs[i][0], regs[i][1]);
         i++;
     }
+    
+    // printf("reset 2 time:%ld\r\n", systick_current_millis());
 
     return 0;
 }
