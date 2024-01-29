@@ -437,7 +437,7 @@ int core1_function(void *ctx)
   return 0;
 }
 
-volatile bool maixpy_sdcard_loading = true; // There may be deadlocks.
+volatile bool maixpy_sdcard_loading = false; // There may be deadlocks.
 int sd_preload(int core)
 {
   sd_preinit_config();
@@ -484,7 +484,7 @@ int sd_preload(int core)
 void mount_sdcard(void){
   // Speed up the system
   maixpy_sdcard_loading = true;
-  dual_func = sd_preload;
+  // dual_func = sd_preload;
 }
 
 void mp_task(void *pvParameter)
@@ -581,26 +581,26 @@ soft_reset:
   mounted_flash = mpy_mount_spiffs(&spiffs_user_mount_handle); //init spiffs of flash
   if (mounted_flash)
   {
-    maix_config_init();
+    // maix_config_init();
   }
-  mount_sdcard();
+  // mount_sdcard();
   // mp_printf(&mp_plat_print, "[MaixPy] init end\r\n"); // for maixpy ide
   // run boot-up scripts
   mp_hal_set_interrupt_char(CHAR_CTRL_C);
   int ret = pyexec_frozen_module("_boot.py");
-  if (ret != 0 && !is_ide_dbg_mode()) // user canceled or ide mode
+  // if (ret != 0 && !is_ide_dbg_mode()) // user canceled or ide mode
   {
     ret = pyexec_file_if_exists("boot.py");
-    if (pyexec_mode_kind == PYEXEC_MODE_FRIENDLY_REPL)
-    {
-      ret = pyexec_file_if_exists("main.py");
-    }
+    // if (pyexec_mode_kind == PYEXEC_MODE_FRIENDLY_REPL)
+    // {
+    //   ret = pyexec_file_if_exists("main.py");
+    // }
   }
-  do
-  {
-    ide_dbg_init();
-    while ((!ide_dbg_script_ready()) && (!ide_dbg_need_save_file()))
-    {
+  // do
+  // {
+    // ide_dbg_init();
+    // while ((!ide_dbg_script_ready()) && (!ide_dbg_need_save_file()))
+    // {
       nlr_buf_t nlr;
       if (nlr_push(&nlr) == 0)
       {
@@ -608,38 +608,38 @@ soft_reset:
         {
           if (pyexec_raw_repl() != 0)
           {
-            break;
+            //break;
           }
         }
         else
-        {
+        { 
           if (pyexec_friendly_repl() != 0)
           {
-            break;
+            //break;
           }
         }
       }
       nlr_pop();
-    }
-    if (ide_dbg_need_save_file())
-    {
-      ide_save_file();
-    }
-    if (ide_dbg_script_ready())
-    { pyexec_frozen_module("ide_debug.py");//just for maixpy ide,to fix amgio lcd bug
-      nlr_buf_t nlr;
-      if (nlr_push(&nlr) == 0)
-      {
-        pyexec_str(ide_dbg_get_script());
-        nlr_pop();
-      }
-      else
-      {
-        mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
-      }
-      ide_dbg_on_script_end();
-    }
-  } while (MP_STATE_PORT(Maix_stdio_uart)->ide_debug_mode);
+    // }
+    // if (ide_dbg_need_save_file())
+    // {
+    //   ide_save_file();
+    // }
+    // if (ide_dbg_script_ready())
+    // { pyexec_frozen_module("ide_debug.py");//just for maixpy ide,to fix amgio lcd bug
+    //   nlr_buf_t nlr;
+    //   if (nlr_push(&nlr) == 0)
+    //   {
+    //     pyexec_str(ide_dbg_get_script());
+    //     nlr_pop();
+    //   }
+    //   else
+    //   {
+    //     mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
+    //   }
+    //   ide_dbg_on_script_end();
+    // }
+  // } while (MP_STATE_PORT(Maix_stdio_uart)->ide_debug_mode);
 
 #if MICROPY_PY_THREAD
   mp_thread_deinit();
