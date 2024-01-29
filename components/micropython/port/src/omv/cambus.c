@@ -19,11 +19,11 @@
 #include "sipeed_i2c.h"
 #include "mphalport.h"
 
-static uint32_t write_bus_delay = 10; //ms
+static uint32_t write_bus_delay = 0; //ms
 
 void cambus_set_writeb_delay(uint32_t delay)
 {
-    write_bus_delay = delay;
+    write_bus_delay = 0;
 }
 
 /**
@@ -39,6 +39,7 @@ int sccb_i2c_init(int8_t i2c, uint8_t pin_clk, uint8_t pin_sda, uint8_t gpio_clk
     }
     else if (i2c == -1)
     {
+
     }
     else
     {
@@ -153,7 +154,7 @@ int cambus_init(uint8_t reg_wid, int8_t i2c, int8_t pin_clk, int8_t pin_sda, uin
     sccb_reg_width = reg_wid;
     if (pin_clk < 0 || pin_sda < 0)
         return -1;
-    i2c_device = i2c;
+    i2c_device = 2;
     sccb_i2c_init(i2c_device, pin_clk, pin_sda, gpio_clk, gpio_sda, 100000);
     return 0;
 }
@@ -277,7 +278,7 @@ int cambus_readb(uint8_t slv_addr, uint16_t reg_addr, uint8_t *reg_data)
 int cambus_writeb(uint8_t slv_addr, uint16_t reg_addr, uint8_t reg_data)
 {
     sccb_i2c_write_byte(i2c_device, slv_addr, reg_addr, sccb_reg_width, reg_data, 10);
-    mp_hal_delay_ms(write_bus_delay);
+    if(write_bus_delay) mp_hal_delay_ms(write_bus_delay);
     return 0;
 }
 
@@ -301,7 +302,9 @@ int cambus_writew2(uint8_t slv_addr, uint16_t reg_addr, uint16_t reg_data)
     return 0;
 }
 
-uint8_t cambus_reg_width()
+uint8_t cambus_reg_width(uint8_t width)
 {
+    if (width != 0)
+        sccb_reg_width = width;
     return sccb_reg_width;
 }
