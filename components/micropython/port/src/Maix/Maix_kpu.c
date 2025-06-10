@@ -1008,15 +1008,28 @@ STATIC mp_obj_t py_kpu_deinit(size_t n_args, const mp_obj_t *pos_args, mp_map_t 
     if(mp_obj_get_type(pos_args[0]) == &py_kpu_net_obj_type)
     {
         py_kpu_net_obj_t *kpu_net = MP_OBJ_TO_PTR(pos_args[0]);
-
-        if(kpu_net->kmodel_ctx)
-            sipeed_kpu_model_destroy(&kpu_net->kmodel_ctx);
-        if(kpu_net->net_deinit != mp_const_none && MP_OBJ_TO_PTR(kpu_net->net_deinit))
+        // 判断 pos_args[1] 如果是整数，且为 1 则不调用 kpu 清理
+        if (n_args > 1 && mp_obj_is_int(pos_args[1]) && mp_obj_get_int(pos_args[1]) == 1)
         {
-            call_deinit(MP_OBJ_TO_PTR(kpu_net->net_deinit),kpu_net->net_args);
-            kpu_net->net_deinit = mp_const_none;
-            m_del_obj(py_kpu_class_yolo_args_obj_t, kpu_net->net_args);
-            kpu_net->net_args = mp_const_none;
+            if(kpu_net->net_deinit != mp_const_none && MP_OBJ_TO_PTR(kpu_net->net_deinit))
+            {
+                call_deinit(MP_OBJ_TO_PTR(kpu_net->net_deinit),kpu_net->net_args);
+                kpu_net->net_deinit = mp_const_none;
+                m_del_obj(py_kpu_class_yolo_args_obj_t, kpu_net->net_args);
+                kpu_net->net_args = mp_const_none;
+            }
+        }
+        else
+        {
+            if(kpu_net->kmodel_ctx)
+                sipeed_kpu_model_destroy(&kpu_net->kmodel_ctx);
+            if(kpu_net->net_deinit != mp_const_none && MP_OBJ_TO_PTR(kpu_net->net_deinit))
+            {
+                call_deinit(MP_OBJ_TO_PTR(kpu_net->net_deinit),kpu_net->net_args);
+                kpu_net->net_deinit = mp_const_none;
+                m_del_obj(py_kpu_class_yolo_args_obj_t, kpu_net->net_args);
+                kpu_net->net_args = mp_const_none;
+            }
         }
         return mp_const_true;
     }
