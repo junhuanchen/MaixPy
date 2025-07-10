@@ -220,8 +220,8 @@ static int mcu_lcd_init(lcd_para_t *lcd_para)
     }
     tft_hard_init(lcd_para->freq, lcd_para->oct);
     /*soft reset*/
-    tft_write_command(SOFTWARE_RESET);
-    msleep(50);
+    // tft_write_command(SOFTWARE_RESET);
+    // msleep(50);
     if (lcd_preinit_handler != NULL)
     {
         lcd_preinit_handler();
@@ -229,7 +229,7 @@ static int mcu_lcd_init(lcd_para_t *lcd_para)
 
     /*exit sleep*/
     tft_write_command(SLEEP_OFF);
-    msleep(120);
+    // msleep(120);
     /*pixel format*/
     tft_write_command(PIXEL_FORMAT_SET);
     data = 0x55;

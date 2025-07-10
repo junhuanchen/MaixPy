@@ -180,10 +180,10 @@ static mp_obj_t py_lcd_init(size_t n_args, const mp_obj_t *pos_args, mp_map_t *k
         {MP_QSTR_offset_h0, MP_ARG_INT, {.u_int = 0}},
         {MP_QSTR_offset_w1, MP_ARG_INT, {.u_int = 0}},
         {MP_QSTR_offset_h1, MP_ARG_INT, {.u_int = 0}},
-        {MP_QSTR_rst, MP_ARG_INT, {.u_int = 37}},
+        {MP_QSTR_rst, MP_ARG_INT, {.u_int = 39}},
         {MP_QSTR_dcx, MP_ARG_INT, {.u_int = 38}},
-        {MP_QSTR_ss, MP_ARG_INT, {.u_int = 36}},
-        {MP_QSTR_clk, MP_ARG_INT, {.u_int = 39}},
+        {MP_QSTR_ss, MP_ARG_INT, {.u_int = 37}},
+        {MP_QSTR_clk, MP_ARG_INT, {.u_int = 36}},
         {MP_QSTR_lcd_type, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = LCD_TYPE_ST7789}},
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -324,7 +324,7 @@ static mp_obj_t py_lcd_init(size_t n_args, const mp_obj_t *pos_args, mp_map_t *k
     // init and clear
     lcd->lcd_para = &lcd_para;
     ret = lcd->init(&lcd_para);
-    lcd->clear(color);
+    // lcd->clear(color);
 
     if (ret != 0)
     {
