@@ -12,6 +12,8 @@
 #include "dmac.h"
 
 #include "wav.h"
+
+#include "sysctl.h"
 /* Audio Parsing Constants */
 #define RIFF_ID 0x52494646 /* correspond to the letters 'RIFF' */
 #define WAVE_ID 0x57415645 /* correspond to the letters 'WAVE' */
@@ -29,9 +31,17 @@
 
 #define WAV_BUF_SIZE (4*1024)
 
+volatile audio_t* audio_global = NULL;
+volatile int audio_global_flag = 0;
+
+
 static int on_irq_audio_transfer(void *ctx)
 {
 	audio_t* audio_obj =  (audio_t*)ctx;
+	if (audio_obj == NULL || audio_global == NULL || audio_obj->play_obj == NULL)
+	{
+		return 0;
+	}
 	wav_decode_t* wav_play_obj = audio_obj->play_obj;
     // printk("[MAIXPY]: play_order %d ok\r\n",wav_play_obj->play_order);
     wav_play_obj->audio_buf[wav_play_obj->play_order].empty = true;
@@ -202,9 +212,11 @@ mp_obj_t wav_play_process(audio_t* audio,uint32_t file_size)
 	wav_play_obj->play_order = 0;
 	wav_play_obj->read_order = 0;
 	dmac_set_irq(WAV_PLAY_DMA_CHANNEL, on_irq_audio_transfer, (void*)audio, 1);
+	audio_global = audio;
 	return MP_OBJ_FROM_PTR(ret_list);
 }
 
+unsigned long audio_play_ticks = 0;
 mp_obj_t wav_play(audio_t* audio)
 {
 	wav_decode_t* play_obj = audio->play_obj; //get format
@@ -212,6 +224,13 @@ mp_obj_t wav_play(audio_t* audio)
 	Maix_i2s_obj_t* i2s_dev = audio->dev;//get device
 	uint32_t read_num = 0;
 	int err_code = 0;
+	if(audio_global == NULL)
+	{
+		return mp_obj_new_int(0);
+	}
+    unsigned long tmp = read_csr(mcycle) / (sysctl_clock_get_freq(SYSCTL_CLOCK_CPU) / 1000);
+	if (tmp - audio_play_ticks < 15) return mp_obj_new_int(1);
+	audio_play_ticks = tmp;
 	if(play_obj->audio_buf[play_obj->read_order].empty)//empty ,altread to read
 	{
 		short MSB_audio = 0;
@@ -237,7 +256,10 @@ mp_obj_t wav_play(audio_t* audio)
 		if(err_code != 0)
 			mp_raise_msg(&mp_type_OSError, "read file error");
 		if(read_num==0)
+		{
+			audio_global = NULL;
 			return mp_obj_new_int(0);
+		}
 		if(play_obj->numchannels == 1)//TODO: optimize mono
 		{
 			int16_t* src = (int16_t*)(play_obj->audio_buf[play_obj->read_order].buf + audio->points * sizeof(uint32_t)/2);
@@ -407,6 +429,10 @@ void wav_finish(audio_t* audio)
 {
 	int err_code = 0;
     int close_code = 0;
+	if(audio_global == audio)
+	{
+		audio_global = NULL;
+	}
 	if(audio->play_obj != NULL)
 	{
 		wav_decode_t* wav_play_obj = audio->play_obj;

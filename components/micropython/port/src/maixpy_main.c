@@ -86,6 +86,8 @@
 
 /********* others *******/
 #include "boards.h"
+#include "py_audio.h"
+#include "wav.h"
 
 #ifdef CONFIG_MAIXPY_K210_UARTHS_DEBUG
 #define MAIXPY_DEBUG_UARTHS_REPL_UART2 // Debug by UARTHS  (use `printk()`) and REPL by UART2
@@ -416,6 +418,8 @@ corelock_t lock;
 volatile dual_func_t dual_func = 0;
 void *arg_list[16];
 
+extern audio_t* audio_global;
+
 void core2_task(void *arg)
 {
   while (1)
@@ -426,7 +430,12 @@ void core2_task(void *arg)
       dual_func = 0;
       //corelock_unlock(&lock);
     }
-
+    if (audio_global != NULL){
+      if (mp_obj_get_int(wav_play(audio_global)) == 0){
+        audio_global = NULL;
+      }
+    }
+    
     //usleep(1);
   }
 }
@@ -442,7 +451,7 @@ int sd_preload(int core)
 {
   sd_preinit_config();
   bool sd_is_ready = false;
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 5; i++)
   {
     // will wait 3s for sd
     if (0 == sd_init())
