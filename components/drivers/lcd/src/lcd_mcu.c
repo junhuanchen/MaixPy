@@ -229,7 +229,7 @@ static int mcu_lcd_init(lcd_para_t *lcd_para)
 
     /*exit sleep*/
     tft_write_command(SLEEP_OFF);
-    msleep(120);
+    // msleep(120);
     /*pixel format*/
     tft_write_command(PIXEL_FORMAT_SET);
     data = 0x55;
@@ -244,6 +244,15 @@ static int mcu_lcd_init(lcd_para_t *lcd_para)
         tft_write_command(INVERSION_DISPALY_ON);
         msleep(10);
     }
+    
+    // uint8_t t[6];
+    // // swap rgb565 endian or little 
+    // tft_write_command(0xB0);
+    // t[0] = (0x00);
+    // // t[1] = (0x10); // endian = 0
+    // t[1] = (0x18); // endian = 1
+    // tft_write_byte(t, 2);
+
     tft_write_command(NORMAL_DISPALY_ON);
     msleep(10);
     /*display on*/

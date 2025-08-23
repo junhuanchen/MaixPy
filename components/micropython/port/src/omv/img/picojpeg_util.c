@@ -34,18 +34,11 @@
 #define RGB565_GREEN    0x07e0
 #define RGB565_BLUE     0x001f
  
-unsigned short RGB888ToRGB565(unsigned int n888Color)
+static inline uint16_t RGB888ToRGB565(uint32_t c)
 {
-	unsigned short n565Color = 0;
- 
-	// 获取RGB单色，并截取高位
-	unsigned char cRed   = (n888Color & RGB888_RED)   >> 19;
-	unsigned char cGreen = (n888Color & RGB888_GREEN) >> 10;
-	unsigned char cBlue  = (n888Color & RGB888_BLUE)  >> 3;
- 
-	// 连接
-	n565Color = (cRed << 11) + (cGreen << 5) + (cBlue << 0);
-	return n565Color;
+    return ((c >> 8) & 0xF800) |
+           ((c >> 5) & 0x07E0) |
+           ((c >> 3) & 0x001F);
 }
  
 unsigned int RGB565ToRGB888(unsigned short n565Color)

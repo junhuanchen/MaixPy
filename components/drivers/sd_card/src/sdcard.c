@@ -19,6 +19,7 @@
 #define debug_print(x, arg...)
 #endif
 
+#include "atomic.h"
 /*
  * @brief  Start Data tokens:
  *         Tokens (necessary because at nop/idle (and CS active) only 0xff is
@@ -52,7 +53,7 @@ sdcard_config_t config = { // see struct sdcard_config_t
 #ifdef CONFIG_BOARD_M5STICK
     33, 31, 30, 32, SD_CS_PIN,
 #else
-    28, 26, 27, 29, SD_CS_PIN,
+    28, 26, 27, 18, SD_CS_PIN,
 #endif
 };
 
@@ -71,7 +72,7 @@ void SD_CS_LOW(void)
 
 void SD_HIGH_SPEED_ENABLE(void)
 {
-    spi_set_clk_rate(SD_SPI_DEVICE, 25000000);
+    spi_set_clk_rate(SD_SPI_DEVICE, 40000000);
 }
 
 void SD_LOW_SPEED_ENABLE(void)
@@ -640,9 +641,11 @@ uint8_t sd_write_sector(uint8_t *data_buff, uint32_t sector, uint32_t count)
     return 0;
 }
 
+static spinlock_t lock = SPINLOCK_INIT;
 uint8_t sd_read_sector_dma(uint8_t *data_buff, uint32_t sector, uint32_t count)
 {
     uint8_t frame[2], flag;
+    spinlock_lock(&lock);
     if (1 == sd_version)
         sector = sector << 9;
     /*!< Send CMD17 (SD_CMD17) to read one block */
@@ -661,6 +664,7 @@ uint8_t sd_read_sector_dma(uint8_t *data_buff, uint32_t sector, uint32_t count)
     {
         sd_end_cmd();
         debug_print("%s sd_get_response() != 0x00 %d\r\n", __func__, flag);
+        spinlock_unlock(&lock);
         return 0xFF;
     }
     while (count)
@@ -683,6 +687,7 @@ uint8_t sd_read_sector_dma(uint8_t *data_buff, uint32_t sector, uint32_t count)
         sd_end_cmd();
     }
     /*!< Returns the reponse */
+    spinlock_unlock(&lock);
     return count > 0 ? 0xFF : 0;
 }
 

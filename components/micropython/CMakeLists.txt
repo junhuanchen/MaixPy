@@ -39,13 +39,15 @@ if(CONFIG_COMPONENT_MICROPYTHON_ENABLE)
                             "${mpy_port_dir}/src/omv/boards/MAIX"
                             "${mpy_port_dir}/src/omv/img/include"
                             "${mpy_port_dir}/src/omv/py/include"
+                            "${mpy_port_dir}/src/lottie/inc"
                             "${mpy_port_dir}/src/standard_lib/include"
                             "${mpy_build_dir}"
         )
     list(APPEND ADD_PRIVATE_INCLUDE "${mpy_port_dir}/src/nes/mapper")
     ###############################################
 
-    
+    append_srcs_dir(ADD_SRCS "port/src/lottie/src/")
+    list(APPEND ADD_STATIC_LIB "port/src/lottie/src/libthorvg.a")
 
     ############## Add source files ###############
     append_srcs_dir(MPY_PORT_SRCS "port/src")
@@ -295,6 +297,7 @@ if(CONFIG_COMPONENT_MICROPYTHON_ENABLE)
         # TODO:
         message(STATUS "OMV minimum enabled")
     endif()
+
     # LVGL
     if(CONFIG_MAIXPY_LVGL_ENABLE)
         list(APPEND ADD_INCLUDE "${mpy_port_dir}/src/lvgl/include"
