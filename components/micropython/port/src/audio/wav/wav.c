@@ -32,8 +32,6 @@
 #define WAV_BUF_SIZE (4*1024)
 
 volatile audio_t* audio_global = NULL;
-volatile int audio_global_flag = 0;
-
 
 static int on_irq_audio_transfer(void *ctx)
 {

@@ -641,11 +641,11 @@ uint8_t sd_write_sector(uint8_t *data_buff, uint32_t sector, uint32_t count)
     return 0;
 }
 
-static spinlock_t lock = SPINLOCK_INIT;
+static corelock_t lock = CORELOCK_INIT;
 uint8_t sd_read_sector_dma(uint8_t *data_buff, uint32_t sector, uint32_t count)
 {
     uint8_t frame[2], flag;
-    spinlock_lock(&lock);
+    corelock_lock(&lock);
     if (1 == sd_version)
         sector = sector << 9;
     /*!< Send CMD17 (SD_CMD17) to read one block */
@@ -664,7 +664,7 @@ uint8_t sd_read_sector_dma(uint8_t *data_buff, uint32_t sector, uint32_t count)
     {
         sd_end_cmd();
         debug_print("%s sd_get_response() != 0x00 %d\r\n", __func__, flag);
-        spinlock_unlock(&lock);
+        corelock_unlock(&lock);
         return 0xFF;
     }
     while (count)
@@ -687,7 +687,7 @@ uint8_t sd_read_sector_dma(uint8_t *data_buff, uint32_t sector, uint32_t count)
         sd_end_cmd();
     }
     /*!< Returns the reponse */
-    spinlock_unlock(&lock);
+    corelock_unlock(&lock);
     return count > 0 ? 0xFF : 0;
 }
 

@@ -42,8 +42,10 @@
 
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
+void tvg_set_log_callback(void * fun);
 /**
 * @defgroup ThorVG_CAPI ThorVG_CAPI
 * @brief ThorVG C language binding APIs.

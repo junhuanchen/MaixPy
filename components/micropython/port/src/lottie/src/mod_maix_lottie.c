@@ -59,8 +59,16 @@ static void _deinit(void) {
 
 /* ---------- MicroPython 函数 ---------- */
 
+void tvg_log_cb(char* str, uint32_t len)
+{
+    mp_printf(&mp_plat_print, str);
+}
+
+
 /* 1. init() */
 STATIC mp_obj_t maix_lottie_init(void) {
+
+    tvg_set_log_callback((void*)tvg_log_cb);
     _ensure_inited();
     return mp_const_none;
 }
@@ -115,9 +123,10 @@ STATIC mp_obj_t maix_lottie_view(mp_obj_t frame_in) {
     if (!gl.inited || !gl.anim) mp_raise_OSError(MP_EINVAL);
     int frame = mp_obj_get_int(frame_in);
 
+    // mp_printf(&mp_plat_print, "[MAIXPY]: s tvg_canvas_sync %p %p %d\n", gl.canvas, gl.anim, frame);
     tvg_animation_set_frame(gl.anim, frame);
     tvg_canvas_update(gl.canvas);
-    tvg_canvas_draw(gl.canvas, true);
+    tvg_canvas_draw(gl.canvas, false); // , true
     tvg_canvas_sync(gl.canvas);
 
     /* ARGB8888 -> RGB565(BE) */
