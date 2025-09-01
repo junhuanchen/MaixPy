@@ -30,7 +30,7 @@ static void _ensure_inited(void) {
     lcd_t *lcd = &lcd_mcu;
     gl.w = lcd->get_width();
     gl.h = lcd->get_height();
-
+    mp_printf(&mp_plat_print, "Maix.lottie init: %dx%d\n", gl.w, gl.h);
     gl.argb   = (uint32_t *)malloc(gl.w * gl.h * 4);
     gl.rgb565 = (uint16_t *)malloc(gl.w * gl.h * 2);
     if (!gl.argb || !gl.rgb565) {
@@ -140,6 +140,7 @@ STATIC mp_obj_t maix_lottie_view(mp_obj_t frame_in) {
         // uint16_t rgb = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
         gl.rgb565[i] = (rgb >> 8) | (rgb << 8);  // swap endian
     }
+    lcd_t *lcd = &lcd_mcu;
     if (lcd) lcd->draw_picture(0, 0, gl.w, gl.h, (uint8_t *)gl.rgb565);
     // return mp_obj_new_bytes((const byte *)gl.rgb565, gl.w * gl.h * 2);
     return mp_const_none;
